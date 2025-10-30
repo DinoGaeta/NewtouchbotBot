@@ -1,15 +1,11 @@
-# Blueprint per Render: definisce l'infrastruttura del NewTouchBot
-
 services:
-  # 1. Database Redis gestito da Render
   - name: redis-touchbot
     type: redis
-    plan: free # Usa il piano gratuito di Render per Redis
-    ipAllowList: # Regola di sicurezza richiesta da Render
+    plan: free
+    ipAllowList:
       - cidr: 0.0.0.0/0
-        description: "Allow all internal services"
+        description: Allow internal services
 
-  # 2. API Server (Flask + Gunicorn)
   - name: api-server
     type: web
     env: python
@@ -17,35 +13,12 @@ services:
     startCommand: "gunicorn NewTouchBot.api:app"
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11
+        value: "3.11"
       - key: REDIS_URL
         fromService:
           type: redis
           name: redis-touchbot
-          property: connectionString # CORRETTO: la proprietà è 'connectionString'
-      - key: BOT_TOKEN
-        sync: false
-      - key: CHAT_ID
-        sync: false
-      - key: ADMIN_TOKEN
-        sync: false
-      - key: OLLAMA_API_URL
-        value: "" # Lasciato vuoto, da configurare in futuro
-
-  # 3. Celery Worker
-  - name: celery-worker
-    type: worker
-    env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "celery -A NewTouchBot.celery_app worker --loglevel=info"
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.11
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: redis-touchbot
-          property: connectionString # CORRETTO
+          property: connectionString
       - key: BOT_TOKEN
         sync: false
       - key: CHAT_ID
@@ -55,7 +28,28 @@ services:
       - key: OLLAMA_API_URL
         value: ""
 
-  # 4. Celery Beat Scheduler
+  - name: celery-worker
+    type: worker
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery -A NewTouchBot.celery_app worker --loglevel=info"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: redis-touchbot
+          property: connectionString
+      - key: BOT_TOKEN
+        sync: false
+      - key: CHAT_ID
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: OLLAMA_API_URL
+        value: ""
+
   - name: celery-beat
     type: worker
     env: python
@@ -63,12 +57,12 @@ services:
     startCommand: "celery -A NewTouchBot.celery_app beat --loglevel=info"
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11
+        value: "3.11"
       - key: REDIS_URL
         fromService:
           type: redis
           name: redis-touchbot
-          property: connectionString # CORRETTO
+          property: connectionString
       - key: BOT_TOKEN
         sync: false
       - key: CHAT_ID
