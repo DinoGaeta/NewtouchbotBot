@@ -5,6 +5,9 @@ services:
   - name: redis-touchbot
     type: redis
     plan: free # Usa il piano gratuito di Render per Redis
+    ipAllowList: # Regola di sicurezza richiesta da Render
+      - cidr: 0.0.0.0/0
+        description: "Allow all internal services"
 
   # 2. API Server (Flask + Gunicorn)
   - name: api-server
