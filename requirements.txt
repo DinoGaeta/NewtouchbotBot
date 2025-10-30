@@ -1,0 +1,7 @@
+requests
+feedparser
+redis
+flask
+python-dotenv
+celery[redis]
+gunicorn

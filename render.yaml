@@ -1,0 +1,81 @@
+# Blueprint per Render: definisce l'infrastruttura del NewTouchBot
+
+services:
+  # 1. Database Redis gestito da Render
+  - name: redis-touchbot
+    type: pserv # Servizio privato
+    image:
+      url: redis:7 # Usa l'immagine ufficiale di Redis
+    disk:
+      name: redis-data
+      mountPath: /data
+      sizeGB: 1
+
+  # 2. API Server (Flask + Gunicorn)
+  - name: api-server
+    type: web
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn NewTouchBot.api:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11 # Specifica una versione di Python
+      - key: REDIS_URL
+        fromService:
+          type: pserv
+          name: redis-touchbot
+          property: url # Ottiene l'URL dal servizio Redis creato sopra
+      - key: BOT_TOKEN
+        sync: false # Da inserire nella dashboard di Render
+      - key: CHAT_ID
+        sync: false # Da inserire nella dashboard di Render
+      - key: ADMIN_TOKEN
+        sync: false # Da inserire nella dashboard di Render
+      - key: OLLAMA_API_URL
+        value: "http://host.docker.internal:11434/api/generate" # Valore di default, potrebbe servire un URL pubblico
+
+  # 3. Celery Worker
+  - name: celery-worker
+    type: worker
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery -A NewTouchBot.celery_app worker --loglevel=info"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: REDIS_URL
+        fromService:
+          type: pserv
+          name: redis-touchbot
+          property: url
+      - key: BOT_TOKEN
+        sync: false
+      - key: CHAT_ID
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: OLLAMA_API_URL
+        value: "http://host.docker.internal:11434/api/generate"
+
+  # 4. Celery Beat Scheduler
+  - name: celery-beat
+    type: worker # Anche lo scheduler è un tipo di 'worker' per Render
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery -A NewTouchBot.celery_app beat --loglevel=info"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: REDIS_URL
+        fromService:
+          type: pserv
+          name: redis-touchbot
+          property: url
+      - key: BOT_TOKEN
+        sync: false
+      - key: CHAT_ID
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: OLLAMA_API_URL
+        value: "http://host.docker.internal:11434/api/generate"

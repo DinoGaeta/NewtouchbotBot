@@ -1,0 +1,74 @@
+### Riepilogo e Piano di Lavoro - Progetto NewTouchBot ###
+
+Data: 30/10/2025
+
+Questo documento serve come memoria condivisa per riprendere il lavoro dopo il riavvio del sistema.
+
+
+### 1. OBIETTIVO FINALE
+
+Evolvere lo script `ghost.py` da un semplice bot Telegram a un sistema di notizie AI scalabile, robusto e potenzialmente monetizzabile, utilizzando tecnologie open-source a costo zero.
+
+
+### 2. STATO ATTUALE (COSA ABBIAMO FATTO)
+
+Abbiamo completato con successo le prime fasi dell'evoluzione del bot:
+
+- **Creazione del Progetto:**
+  - Creata la cartella `C:\Users\corra\Desktop\NewTouchBot`.
+  - Creato il file `ghost.py` con il codice originale.
+
+- **Fase 1: Integrazione AI (Completata):
+  - Sostituito il commento casuale con una chiamata a un modello AI (`phi-3-mini`) tramite Ollama.
+  - Il bot ora genera commenti unici e pertinenti per ogni notizia.
+
+- **Fase 2: Sicurezza API (Completata):
+  - Blindato gli endpoint sensibili (`/forza`, `/kick`) tramite un `ADMIN_TOKEN` segreto.
+  - Le chiamate a queste API ora richiedono un header di autorizzazione `X-Admin-Token`.
+
+- **Configurazione Ambiente (Completata):
+  - Lo script è stato modificato per leggere le variabili d'ambiente (token, ecc.) da un file `.env` tramite la libreria `python-dotenv`.
+
+- **Fase 3: Integrazione Redis (Codice completato, Setup in sospeso):
+  - Il codice di `ghost.py` è stato interamente modificato per usare Redis come gestore di stato.
+  - Le liste di link già inviati (`sent_links`, `alert_sent_ids`, `sent_today_hours`) non sono più in memoria ma vengono salvate su Redis.
+  - **Questo rende il bot resiliente ai riavvii (non invierà più duplicati).**
+  - **BLOCCO ATTUALE:** Siamo bloccati perché il tuo ambiente Docker non è attivo, impedendoci di avviare il container Redis necessario.
+
+
+### 3. PIANO DI LAVORO RESTANTE (COSA DOBBIAMO FARE)
+
+- **Fase 3: Setup Redis (Da completare):
+  - **Azione tua:** Devi far funzionare Docker e avviare il container Redis.
+
+- **Fase 4: Architettura a Microservizi (Celery):
+  - **Obiettivo:** Separare lo script monolitico in componenti specializzati per una vera scalabilità.
+  - **Come:** Introdurremo la libreria `Celery`. Suddivideremo `ghost.py` in:
+    - `api.py`: Conterrà solo il server web Flask.
+    - `worker.py`: Si occuperà di eseguire i compiti pesanti (leggere i feed, chiamare l'AI, inviare a Telegram).
+    - `scheduler.py`: Si occuperà solo di dire ai worker QUANDO lavorare.
+  - **Vantaggio:** Potremo avere più `worker` in parallelo per gestire carichi di lavoro enormi.
+
+- **Fase 5: Arricchimento AI e Monetizzazione:
+  - **Obiettivo:** Sfruttare l'architettura per creare feature premium.
+  - **Come:** 
+    1. Implementare analisi AI più profonde: riassunti completi, analisi del sentiment, estrazione di entità (aziende, persone).
+    2. Salvare questi dati arricchiti in un database robusto (es. PostgreSQL).
+    3. Creare le basi per la monetizzazione: un'API a pagamento per accedere ai dati, feature avanzate per gli utenti del bot.
+
+
+### 4. AZIONE IMMEDIATA PER TE (DOPO IL RIAVVIO)
+
+1.  **Riavvia il computer.**
+2.  **Avvia l'applicazione Docker Desktop** dal menu Start e attendi che sia completamente carica e funzionante.
+3.  **Apri un terminale** e verifica che Docker risponda correttamente digitando: `docker ps`.
+4.  Se il comando precedente funziona (non dà l'errore "cannot connect"), **avvia il container Redis** con il comando: `docker run -d -p 6379:6379 --name redis-touchbot redis`.
+5.  Quando tutto questo è fatto, scrivimi semplicemente "Docker e Redis pronti".
+
+
+### 5. AZIONE IMMEDIATA PER ME (DOPO LA TUA CONFERMA)
+
+1.  Attendo il tuo via libera ("Docker e Redis pronti").
+2.  Una volta ricevuto, ti introdurrò nel dettaglio la **Fase 4** e inizierò a modificare il codice per implementare l'architettura con Celery.
+
+A dopo il riavvio!
